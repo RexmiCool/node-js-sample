@@ -1,33 +1,68 @@
 version: 2.1
 
-executors:
-  docker-executor:
-    docker:
-      - image: cimg/base:current  # Image CircleCI avec Docker préinstallé
-
 jobs:
   build:
-    executor: docker-executor
+    machine: true
     steps:
       - checkout
-      - setup_remote_docker  # Active Docker pour builder et exécuter les conteneurs
       - run:
-          name: Build Docker Image
-          command: docker build -t $DOCKERHUB_USERNAME/my-app:latest .
-      - run:
-          name: Run Container
-          command: docker run -d -p 8080:8080 --name my-running-app $DOCKERHUB_USERNAME/my-app:latest
-      - run:
-          name: Test if API is running
+          name: Build Docker image
           command: |
-            sleep 30  # Attendre que le conteneur démarre
-            curl --fail http://localhost:8080/ || exit 1
+            docker build -t my-node-app .
       - run:
-          name: Push Docker Image
-          command: docker push $DOCKERHUB_USERNAME/my-app:latest
+          name: Save Docker image
+          command: |
+            docker save my-node-app | gzip > my-node-app.tar.gz
+      - persist_to_workspace:
+          root: .
+          paths:
+            - my-node-app.tar.gz
+
+  test:
+    machine: true
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Load Docker image
+          command: |
+            gunzip -c ./my-node-app.tar.gz | docker load
+      - run:
+          name: Run Docker container
+          command: |
+            docker run -d -p 8080:8080 --name my-node-app my-node-app
+      - run:
+          name: Test Docker container
+          command: |
+            sleep 10  # Attendre que le conteneur démarre
+            curl --fail http://localhost:8080/ || (docker logs my-node-app && exit 1)
+
+  push:
+    machine: true
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Load Docker image
+          command: |
+            gunzip -c ./my-node-app.tar.gz | docker load
+      - run:
+          name: Push Docker image
+          command: |
+            echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin
+            docker tag my-node-app $DOCKERHUB_USERNAME/my-node-app:latest
+            docker push $DOCKERHUB_USERNAME/my-node-app:latest
 
 workflows:
   version: 2
-  build-and-push:
+  build-and-test:
     jobs:
       - build
+      - test:
+          requires:
+            - build
+      - push:
+          requires:
+            - test
