@@ -49,7 +49,7 @@ jobs:
         run: docker run -d -p 8080:8080 --name my-node-app my-node-app
 
       - name: Wait for container to start
-        run: sleep 10  # Attendre que l'application démarre
+        run: sleep 10  # Attendre que l'application démarredq
 
       - name: Test if API is running
         run: curl --fail http://localhost:8080/ || (docker logs my-node-app && exit 1)
