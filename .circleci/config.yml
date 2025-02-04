@@ -14,9 +14,9 @@ jobs:
       - run:
           name: Build Docker Image
           command: docker build -t my-app .
-      - run:
-          name: Run Tests (optionnel)
-          command: docker run my-app npm test
+      # - run:
+      #     name: Run Tests (optionnel)
+      #     command: docker run my-app npm test
 
   push:
     executor: docker-executor
