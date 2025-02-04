@@ -10,13 +10,18 @@ jobs:
     executor: docker-executor
     steps:
       - checkout
-      - setup_remote_docker  # Active Docker pour builder des images
-      - run:
-          name: Login to Docker Hub
-          command: echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+      - setup_remote_docker  # Active Docker pour builder et exécuter les conteneurs
       - run:
           name: Build Docker Image
           command: docker build -t $DOCKERHUB_USERNAME/my-app:latest .
+      - run:
+          name: Run Container
+          command: docker run -d -p 3000:3000 --name my-running-app $DOCKERHUB_USERNAME/my-app:latest
+      - run:
+          name: Test if API is running
+          command: |
+            sleep 5  # Attendre que le conteneur démarre
+            curl --fail http://localhost:3000/ || exit 1
       - run:
           name: Push Docker Image
           command: docker push $DOCKERHUB_USERNAME/my-app:latest
