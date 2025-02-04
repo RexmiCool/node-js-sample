@@ -1,4 +1,4 @@
-name: Docker Image CI Bis
+name: Build, Test & Push Docker Imagedqfdsgfgdf
 
 on:
   push:
