@@ -16,12 +16,12 @@ jobs:
           command: docker build -t $DOCKERHUB_USERNAME/my-app:latest .
       - run:
           name: Run Container
-          command: docker run -d -p 3000:3000 --name my-running-app $DOCKERHUB_USERNAME/my-app:latest
+          command: docker run -d -p 8080:8080 --name my-running-app $DOCKERHUB_USERNAME/my-app:latest
       - run:
           name: Test if API is running
           command: |
             sleep 5  # Attendre que le conteneur démarre
-            curl --fail http://localhost:3000/ || exit 1
+            curl --fail http://localhost:8080/ || exit 1
       - run:
           name: Push Docker Image
           command: docker push $DOCKERHUB_USERNAME/my-app:latest
