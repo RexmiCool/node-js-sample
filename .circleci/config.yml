@@ -3,7 +3,7 @@ version: 2.1
 executors:
   docker-executor:
     docker:
-      - image: cimg/node:18.17  # Image de base pour exécuter les builds
+      - image: cimg/base:current  # Image CircleCI avec Docker préinstallé
 
 jobs:
   build:
@@ -12,32 +12,17 @@ jobs:
       - checkout
       - setup_remote_docker  # Active Docker pour builder des images
       - run:
-          name: Build Docker Image
-          command: docker build -t my-app .
-      # - run:
-      #     name: Run Tests (optionnel)
-      #     command: docker run my-app npm test
-
-  push:
-    executor: docker-executor
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Build Docker Image
-          command: docker build -t my-dockerhub-username/my-app:latest .
-      - run:
           name: Login to Docker Hub
-          command: echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin        
+          command: echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+      - run:
+          name: Build Docker Image
+          command: docker build -t $DOCKERHUB_USERNAME/my-app:latest .
       - run:
           name: Push Docker Image
-          command: docker push my-dockerhub-username/my-app:latest
+          command: docker push $DOCKERHUB_USERNAME/my-app:latest
 
 workflows:
   version: 2
   build-and-push:
     jobs:
       - build
-      - push:
-          requires:
-            - build
