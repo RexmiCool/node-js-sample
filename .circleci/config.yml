@@ -20,7 +20,7 @@ jobs:
       - run:
           name: Test if API is running
           command: |
-            sleep 5  # Attendre que le conteneur démarre
+            sleep 30  # Attendre que le conteneur démarre
             curl --fail http://localhost:8080/ || exit 1
       - run:
           name: Push Docker Image
